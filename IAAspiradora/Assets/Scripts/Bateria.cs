@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Componente auxiliar que modela el comportamiento de una bateria interna
-// Dicha batería se descarga constantemente a menos que se utilize un método para recargar
+// Dicha batería se descarga constantemente a menos que se utilice un método para recargar
 public class Bateria : MonoBehaviour
 {
     public float bateria; // Esta cifra es equivalente a los segundos activos de la batería

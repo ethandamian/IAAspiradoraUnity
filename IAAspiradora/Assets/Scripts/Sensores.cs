@@ -114,8 +114,12 @@ public class Sensores : MonoBehaviour{
         return radar.CercaDeBasura();
     }
 
-    public float Bateria(){
+    public float getBateria(){
         return bateria.NivelDeBateria();
+    }
+
+    public float MaxBateria(){
+        return bateria.capacidadMaximaBateria;
     }
 
     // Algunos otros métodos auxiliares que pueden ser de apoyo

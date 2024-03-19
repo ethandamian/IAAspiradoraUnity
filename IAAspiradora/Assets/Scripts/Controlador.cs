@@ -19,7 +19,7 @@ public class Controlador : MonoBehaviour{
     void FixedUpdate(){
 
         // El agente no realiza ninguna acción si no tiene batería
-        if(sensor.Bateria() <= 0)
+        if(sensor.getBateria() <= 0)
             return;
 
         // A continuación se muestran ejemplos de uso de actuadores y sensores
