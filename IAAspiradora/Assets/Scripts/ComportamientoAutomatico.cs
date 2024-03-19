@@ -49,8 +49,9 @@ public class ComportamientoAutomatico : MonoBehaviour
 
     void FixedUpdate(){
 
-        if (currentState!=State.CARGANDO && currentState != State.YENDOABASE && !BateriaSuficiente()){
+        if ((currentState==State.MAPEO || currentState == State.DFS || currentState == State.REGRESANDO) && !BateriaSuficiente()){
             anterior = currentState;
+            look = false;
             SetState(State.YENDOABASE);
         }
 
@@ -116,7 +117,6 @@ public class ComportamientoAutomatico : MonoBehaviour
             }
         }else{
             SetState(State.TERMINAR);
-        
         }
     }
 
