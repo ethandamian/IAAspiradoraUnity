@@ -13,12 +13,12 @@ public class ComportamientoAutomatico : MonoBehaviour
         REGRESANDO,
         TERMINAR,
         TERMINADO,
-
-        //////////////////////////
         CARGANDO,
         YENDOABASE,
-        REGRESANDODECARGA
-        //////////////////////////
+        REGRESANDODECARGA,
+        RECORRIDO,
+        BACK,
+        ABASE
     }
 
     public State currentState;
@@ -28,12 +28,15 @@ public class ComportamientoAutomatico : MonoBehaviour
     private Vertice verticeActual, verticeDestino;
     public bool fp = true, look;
 
-    //////////////////////////
+    // Variables para el regreso a cargar bateria
     private State anterior;
     public List<Vertice> camino = new List<Vertice>();
+    public List<Vertice> caminoBase = new List<Vertice>();
     public Vertice actualCamino; 
     public int indiceCamino = 0;
-    //////////////////////////
+
+    public List<Vertice> vertices = new List<Vertice>();
+    public int indiceVertice = 0;
 
 
     void Start(){
@@ -49,7 +52,7 @@ public class ComportamientoAutomatico : MonoBehaviour
 
     void FixedUpdate(){
 
-        if ((currentState==State.MAPEO || currentState == State.DFS || currentState == State.REGRESANDO) && !BateriaSuficiente()){
+        if (currentState!=State.YENDOABASE && currentState!=State.CARGANDO && currentState!=State.REGRESANDODECARGA && !BateriaSuficiente()){
             anterior = currentState;
             look = false;
             SetState(State.YENDOABASE);
@@ -69,6 +72,11 @@ public class ComportamientoAutomatico : MonoBehaviour
                 terminar();
                 break;
             case State.TERMINADO:
+                Reiniciar();
+                SetState(State.RECORRIDO);
+                break;
+            case State.RECORRIDO:
+                recorrerGrafica();
                 break;
             case State.YENDOABASE:
                 RegresarABase();
@@ -78,6 +86,12 @@ public class ComportamientoAutomatico : MonoBehaviour
                 break;
             case State.REGRESANDODECARGA:
                 regresarDeCargarse();
+                break;
+            case State.BACK:
+                back();
+                break;
+            case State.ABASE:
+                ABase();
                 break;
         }
     }
@@ -93,6 +107,7 @@ public class ComportamientoAutomatico : MonoBehaviour
     void UpdateMAPEO(){
         if (fp){
             mapa.popStack(out verticeDestino);
+            vertices.Add(verticeDestino);
             mapa.setPreV(verticeDestino);   //Asignar a mapa el vértice nuevo al que nos vamos a mover, para crear las adyacencias necesarias.
             fp = false;
         }
@@ -130,10 +145,26 @@ public class ComportamientoAutomatico : MonoBehaviour
             actuador.Adelante();
         }else{
             verticeActual = verticeActual.padre;
-            //mapa.setPreV(verticeActual);
             look = false;
             fp = false;
             SetState(State.MAPEO);
+        }
+
+    }
+
+    void back(){
+        Vertice aux = verticeActual.padre;
+        if (Vector3.Distance(sensor.Ubicacion(), aux.posicion) >= 0.04f){
+            if (!look){
+                transform.LookAt(aux.posicion);
+                look = true;
+            }
+            actuador.Adelante();
+        }else{
+            verticeActual = verticeActual.padre;
+            look = false;
+            fp = false;
+            SetState(State.RECORRIDO);
         }
 
     }
@@ -169,6 +200,7 @@ public class ComportamientoAutomatico : MonoBehaviour
 
 
     //////////////////////////
+    /// FUNCIONES para el regreso a cargar bateria
     
     // Función para saber si tiene bateria suficiente para seguir.
     bool BateriaSuficiente(){
@@ -183,7 +215,6 @@ public class ComportamientoAutomatico : MonoBehaviour
             // Buscar el camino a la base
             if (mapa.mapa.AStar(verticeActual, mapa.baseCarga)){
                 camino = mapa.mapa.camino;
-                //mapa.DrawPath();
             }else{
                 Debug.Log("No hay camino");
             }
@@ -199,6 +230,33 @@ public class ComportamientoAutomatico : MonoBehaviour
                 }
             }else{
                 SetState(State.CARGANDO);
+            }
+
+        }
+
+    }
+
+    void ABase(){
+
+        if(caminoBase.Count == 0){
+            // Buscar el camino a la base
+            if (mapa.mapa.AStar(verticeActual, mapa.baseCarga)){
+                caminoBase = mapa.mapa.camino;
+            }else{
+                Debug.Log("No hay camino");
+            }
+        }else{
+            if(indiceCamino != caminoBase.Count){
+                // Moverse al siguiente vertice del camino
+                if (Vector3.Distance(sensor.Ubicacion(), caminoBase[indiceCamino].posicion) >= 0.04f){ // Si no se ha llegado al vertice
+                    transform.LookAt(caminoBase[indiceCamino].posicion);
+                    actuador.Adelante();
+                }else{ // Si ya se llego al vertice
+                    actualCamino = caminoBase[indiceCamino];
+                    indiceCamino++;
+                }
+            }else{
+                SetState(State.TERMINADO);
             }
 
         }
@@ -231,7 +289,51 @@ public class ComportamientoAutomatico : MonoBehaviour
             camino = new List<Vertice>();
             actualCamino = null;
             SetState(anterior);
-            //anterior = null;
+        }
+    }
+
+    //Funcion para reiniciar variables
+    void Reiniciar(){
+        fp = true;
+        verticeDestino = null;
+        //verticeActual = null;
+        indiceVertice = 0;
+        look = false;
+        indiceCamino = 0;
+    }
+
+    //Función para recorrer la gráfica
+    public void recorrerGrafica(){
+        if (fp){
+            if(indiceVertice >= vertices.Count){
+                SetState(State.TERMINADO);
+                return;
+            }
+            verticeDestino = vertices[indiceVertice];
+            indiceVertice++;
+            fp = false;
+        }
+        if (verticeDestino != null){
+            if(verticeDestino.padre != null){
+                if (verticeDestino.padre != verticeActual){
+                    SetState(State.BACK);
+                }else{
+                    if (Vector3.Distance(sensor.Ubicacion(), verticeDestino.posicion) >= 0.04f){
+                        if (!look){
+                            transform.LookAt(verticeDestino.posicion);
+                            look = true;
+                        }
+                        actuador.Adelante();
+                    }else{
+                        verticeActual = verticeDestino;
+                        look = false;
+                        fp = true;
+                    }
+                }
+            }
+        }else{
+            //SetState(State.TERMINAR);
+            SetState(State.ABASE);
         }
     }
 
