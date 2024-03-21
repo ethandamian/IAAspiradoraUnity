@@ -38,6 +38,8 @@ public class ComportamientoAutomatico : MonoBehaviour
     public List<Vertice> vertices = new List<Vertice>();
     public int indiceVertice = 0;
 
+    public Vertice actualRegreso;
+
 
     void Start(){
         SetState(State.DFS);
@@ -69,6 +71,7 @@ public class ComportamientoAutomatico : MonoBehaviour
                 regresar();
                 break;
             case State.TERMINAR:
+                vertices.Add(vertices[0]);
                 terminar();
                 break;
             case State.TERMINADO:
@@ -238,7 +241,19 @@ public class ComportamientoAutomatico : MonoBehaviour
 
     void ABase(){
 
-        if(caminoBase.Count == 0){
+        if(actualRegreso != mapa.baseCarga){
+            if(Vector3.Distance(sensor.Ubicacion(), actualRegreso.padre.posicion) >= 0.04f){
+                transform.LookAt(actualRegreso.posicion);
+                actuador.Adelante();
+            }else{
+                actualRegreso = actualRegreso.padre;
+            }
+        }else{
+            SetState(State.TERMINADO);
+        }
+
+
+        /*if(caminoBase.Count == 0){
             // Buscar el camino a la base
             if (mapa.mapa.AStar(verticeActual, mapa.baseCarga)){
                 caminoBase = mapa.mapa.camino;
@@ -256,10 +271,11 @@ public class ComportamientoAutomatico : MonoBehaviour
                     indiceCamino++;
                 }
             }else{
+                caminoBase = new List<Vertice>();
                 SetState(State.TERMINADO);
             }
 
-        }
+        }*/
 
     }
 
@@ -305,10 +321,7 @@ public class ComportamientoAutomatico : MonoBehaviour
     //Función para recorrer la gráfica
     public void recorrerGrafica(){
         if (fp){
-            if(indiceVertice >= vertices.Count){
-                SetState(State.TERMINADO);
-                return;
-            }
+            
             verticeDestino = vertices[indiceVertice];
             indiceVertice++;
             fp = false;
@@ -332,8 +345,7 @@ public class ComportamientoAutomatico : MonoBehaviour
                 }
             }
         }else{
-            //SetState(State.TERMINAR);
-            SetState(State.ABASE);
+            SetState(State.TERMINADO);
         }
     }
 
