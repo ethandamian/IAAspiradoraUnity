@@ -17,8 +17,7 @@ public class ComportamientoAutomatico : MonoBehaviour
         YENDOABASE,
         REGRESANDODECARGA,
         RECORRIDO,
-        BACK,
-        ABASE
+        BACK
     }
 
     public State currentState;
@@ -31,14 +30,11 @@ public class ComportamientoAutomatico : MonoBehaviour
     // Variables para el regreso a cargar bateria
     private State anterior;
     public List<Vertice> camino = new List<Vertice>();
-    public List<Vertice> caminoBase = new List<Vertice>();
     public Vertice actualCamino; 
     public int indiceCamino = 0;
 
     public List<Vertice> vertices = new List<Vertice>();
     public int indiceVertice = 0;
-
-    public Vertice actualRegreso;
 
 
     void Start(){
@@ -92,9 +88,6 @@ public class ComportamientoAutomatico : MonoBehaviour
                 break;
             case State.BACK:
                 back();
-                break;
-            case State.ABASE:
-                ABase();
                 break;
         }
     }
@@ -236,46 +229,6 @@ public class ComportamientoAutomatico : MonoBehaviour
             }
 
         }
-
-    }
-
-    void ABase(){
-
-        if(actualRegreso != mapa.baseCarga){
-            if(Vector3.Distance(sensor.Ubicacion(), actualRegreso.padre.posicion) >= 0.04f){
-                transform.LookAt(actualRegreso.posicion);
-                actuador.Adelante();
-            }else{
-                actualRegreso = actualRegreso.padre;
-            }
-        }else{
-            SetState(State.TERMINADO);
-        }
-
-
-        /*if(caminoBase.Count == 0){
-            // Buscar el camino a la base
-            if (mapa.mapa.AStar(verticeActual, mapa.baseCarga)){
-                caminoBase = mapa.mapa.camino;
-            }else{
-                Debug.Log("No hay camino");
-            }
-        }else{
-            if(indiceCamino != caminoBase.Count){
-                // Moverse al siguiente vertice del camino
-                if (Vector3.Distance(sensor.Ubicacion(), caminoBase[indiceCamino].posicion) >= 0.04f){ // Si no se ha llegado al vertice
-                    transform.LookAt(caminoBase[indiceCamino].posicion);
-                    actuador.Adelante();
-                }else{ // Si ya se llego al vertice
-                    actualCamino = caminoBase[indiceCamino];
-                    indiceCamino++;
-                }
-            }else{
-                caminoBase = new List<Vertice>();
-                SetState(State.TERMINADO);
-            }
-
-        }*/
 
     }
 
